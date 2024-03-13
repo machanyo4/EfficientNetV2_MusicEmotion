@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from sklearn.metrics import accuracy_score, confusion_matrix
-from dataset import MusicUnknownDatasets
+from raw_dataset import MusicUnknownDatasets
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.models import efficientnet_v2_s
@@ -11,14 +11,14 @@ import numpy as np
 
 # データセットパスとモデルパス
 dataset_path = "/chess/project/project1/music/MER_audio_taffc_dataset_wav/spec/"
-model_path = "../model/Best_EfficientnetV2_mask.pth"
+model_path = "../model/Best_EfficientnetV2_col_raw.pth"
 
 # ハイパーパラメータ
-batch_size = 32
+batch_size = 64
 
 # 前処理
 transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=3),
+    # transforms.Grayscale(num_output_channels=3),
     transforms.Resize((384, 384)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),

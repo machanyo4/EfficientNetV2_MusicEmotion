@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 import os
 import random
 from PIL import Image
-from dataset import MusicTrainDatasets, MusicTestDatasets
+from raw_dataset import MusicTrainDatasets, MusicTestDatasets
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -23,14 +23,15 @@ os.makedirs('../result', exist_ok=True)
 os.makedirs('../model', exist_ok=True)
 
 # ハイパーパラメータ
-batch_size = 32
+batch_size = 64
 learning_rate = 0.001
 num_epochs = 50
+
 
 # データセットの読み込みと前処理
 transform = transforms.Compose(
     [
-        transforms.Grayscale(num_output_channels=3),
+        # transforms.Grayscale(num_output_channels=3),
         transforms.Resize((384,384)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -44,9 +45,10 @@ train_loader = DataLoader(dataset = train_datasets, batch_size=batch_size, shuff
 valid_loader = DataLoader(dataset = test_datasets, batch_size=batch_size, shuffle=False)
 
 # モデルの構築
-model = efficientnet_v2_s(weights='IMAGENET1K_V1')  
+model = efficientnet_v2_s(weights='IMAGENET1K_V1')  # 'IMAGENET1K_V1'
 model.classifier[-1] = nn.Linear(model.classifier[-1].in_features, 4)  # 新しいクラス数に変更
 
+# print('model : ', model)
 
 # デバイスの指定
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -65,7 +67,9 @@ test_loss_list = []
 train_acc_list = []
 test_acc_list = []
 
-best_test_accuracy = 0.0  # 最高のテスト精度を保存する変数
+# 最高のテスト精度を保存する変数
+best_test_accuracy = 0.0  
+best_train_accuracy = 0.0  # 最高の訓練精度を保存する変数
 best_epoch = 0  # 最高のテスト精度を達成したエポックを保存する変数
 
 # 学習のループ
@@ -123,9 +127,10 @@ for epoch in range(num_epochs):
           f'Test Loss: {test_loss:.4f}, Test Acc: {test_accuracy:.2f}%')
     
 
-    # 最高のテスト精度を持つモデルを保存
-    if test_accuracy > best_test_accuracy:
+    # 最高の精度を持つモデルを保存
+    if test_accuracy > best_test_accuracy or (test_accuracy == best_test_accuracy and train_accuracy > best_train_accuracy):
         best_test_accuracy = test_accuracy
+        best_train_accuracy = train_accuracy
         best_epoch = epoch
         torch.save(model.state_dict(), '../model/Best_EfficientnetV2.pth')
 
